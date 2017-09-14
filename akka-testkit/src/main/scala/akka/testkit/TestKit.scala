@@ -408,8 +408,11 @@ trait TestKitBase {
 
   /**
    * Receive one message from the test actor and assert that it is the Terminated message of the given ActorRef.
+   * Before calling this method, you have to `watch` the target actor ref.
    * Wait time is bounded by the given duration, with an AssertionFailure being thrown in case of timeout.
    *
+   * @param target the actor ref expected to be Terminated
+   * @param max wait no more than max time, otherwise throw AssertionFailure
    * @return the received Terminated message
    */
   def expectTerminated(target: ActorRef, max: Duration = Duration.Undefined): Terminated =
@@ -439,7 +442,11 @@ trait TestKitBase {
   }
 
   /**
-   * Same as `fishForMessage`, but gets a different partial function and returns properly typed message.
+   * Waits for specific message that partial function matches while ignoring all other messages coming in the meantime.
+   * Use it to ignore any number of messages while waiting for a specific one.
+   *
+   * @return result of applying partial function to the last received message,
+   *         i.e. the first one for which the partial function is defined
    */
   def fishForSpecificMessage[T](max: Duration = Duration.Undefined, hint: String = "")(f: PartialFunction[Any, T]): T = {
     val _max = remainingOrDilated(max)

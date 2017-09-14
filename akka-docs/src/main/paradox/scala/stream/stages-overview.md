@@ -541,6 +541,24 @@ Sources and sinks for integrating with `java.io.InputStream` and `java.io.Output
 `StreamConverters`. As they are blocking APIs the implementations of these stages are run on a separate
 dispatcher configured through the `akka.stream.blocking-io-dispatcher`.
 
+@@@ warning
+
+Be aware that `asInputStream` and `asOutputStream` materialize `InputStream` and `OutputStream` respectively as
+blocking API implementation. They will block tread until data will be available from upstream.
+Because of blocking nature these objects cannot be used in `mapMaterializeValue` section as it causes deadlock
+of the stream materialization process.
+For example, following snippet will fall with timeout exception:
+
+```scala
+...
+.toMat(StreamConverters.asInputStream().mapMaterializedValue { inputStream ⇒
+        inputStream.read()  // this could block forever
+        ...
+}).run()
+```
+
+@@@
+
 ---------------------------------------------------------------
 
 ### fromOutputStream
@@ -681,10 +699,22 @@ states (for example `Try` in Scala).
 ## Simple processing stages
 
 These stages can transform the rate of incoming elements since there are stages that emit multiple elements for a
-single input (e.g. `mapConcat') or consume multiple elements before emitting one output (e.g. `filter`).
+single input (e.g. `mapConcat`) or consume multiple elements before emitting one output (e.g. `filter`).
 However, these rate transformations are data-driven, i.e. it is the incoming elements that define how the
 rate is affected. This is in contrast with [detached stages](#backpressure-aware-stages) which can change their processing behavior
 depending on being backpressured by downstream or not.
+
+---------------------------------------------------------------
+
+### alsoTo
+
+Attaches the given `Sink` to this `Flow`, meaning that elements that passes through will also be sent to the `Sink`.
+
+**emits** when an element is available and demand exists both from the Sink and the downstream
+
+**backpressures** when downstream or Sink backpressures
+
+**completes** when upstream completes
 
 ---------------------------------------------------------------
 
@@ -1045,19 +1075,6 @@ This can be changed by calling @scala[`Attributes.logLevels(...)`] @java[`Attrib
 
 ---------------------------------------------------------------
 
-### recoverWithRetries
-
-Switch to alternative Source on flow failure. It stays in effect after a failure has been recovered up to `attempts`
-number of times. Each time a failure is fed into the partial function and a new Source may be materialized.
-
-**emits** when element is available from the upstream or upstream is failed and element is available from alternative Source
-
-**backpressures** when downstream backpressures
-
-**completes** when upstream completes or upstream failed with exception provided partial function can handle
-
----------------------------------------------------------------
-
 <br/>
 
 ## Flow stages composed of Sinks and Sources
@@ -1109,7 +1126,7 @@ operation at the same time (usually handling the completion of a @scala[`Future`
 
 Pass incoming elements to a function that return a @scala[`Future`] @java[`CompletionStage`] result. When the @scala[`Future`] @java[`CompletionStage`] arrives the result is passed
 downstream. Up to `n` elements can be processed concurrently, but regardless of their completion time the incoming
-order will be kept when results complete. For use cases where order does not mather `mapAsyncUnordered` can be used.
+order will be kept when results complete. For use cases where order does not matter `mapAsyncUnordered` can be used.
 
 If a @scala[`Future`] @java[`CompletionStage`] fails, the stream also fails (unless a different supervision strategy is applied)
 
@@ -1574,6 +1591,19 @@ smallest element.
 Merge multiple sources. Prefer one source if all sources has elements ready.
 
 **emits** when one of the inputs has an element available, preferring a defined input if multiple have elements available
+
+**backpressures** when downstream backpressures
+
+**completes** when all upstreams complete (This behavior is changeable to completing when any upstream completes by setting `eagerComplete=true`.)
+
+---------------------------------------------------------------
+
+### mergePrioritized
+
+Merge multiple sources. Prefer sources depending on priorities if all sources has elements ready. If a subset of all
+sources has elements ready the relative priorities for those sources are used to prioritise.
+
+**emits** when one of the inputs has an element available, preferring inputs based on their priorities if multiple have elements available
 
 **backpressures** when downstream backpressures
 

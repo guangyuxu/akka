@@ -63,6 +63,9 @@ actor—are stopped.
 The above mentioned @scala[`expectMsg`]@java[`expectMsgEquals`] is not the only method for formulating
 assertions concerning received messages, the full set is this:
 
+Scala
+:   @@snip [TestkitDocSpec.scala]($code$/scala/docs/testkit/TestkitDocSpec.scala) { #test-expect }
+
 Java
 :   @@snip [TestKitDocTest.java]($code$/java/jdocs/testkit/TestKitDocTest.java) { #test-expect }
 
@@ -361,7 +364,7 @@ above; just use the power!
 
 @@@ warning
 
-Any message send from a `TestProbe` to another actor which runs on the
+Any message sent from a `TestProbe` to another actor which runs on the
 CallingThreadDispatcher runs the risk of dead-lock, if that other actor might
 also send to this probe. The implementation of `TestProbe.watch` and
 `TestProbe.unwatch` will also send a message to the watchee, which

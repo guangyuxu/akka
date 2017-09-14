@@ -76,7 +76,7 @@ forked JVM.
 So to create a 3-node test called `Sample`, you can create three applications
 like the following:
 
-```
+```scala
 package sample
 
 object SampleMultiJvmNode1 {
@@ -117,8 +117,8 @@ You can change the name of the multi-JVM test source directory by adding the fol
 configuration to your project:
 
 ```none
-unmanagedSourceDirectories in MultiJvm <<=
-   Seq(baseDirectory(_ / "src/some_directory_here")).join
+unmanagedSourceDirectories in MultiJvm :=
+   Seq(baseDirectory(_ / "src/some_directory_here")).join.value
 ```
 
 You can change what the `MultiJvm` identifier is. For example, to change it to
@@ -165,7 +165,7 @@ do this use the same naming convention as above, but create ScalaTest suites
 rather than objects with main methods. You need to have ScalaTest on the
 classpath. Here is a similar example to the one above but using ScalaTest:
 
-```
+```scala
 package sample
 
 import org.scalatest.WordSpec

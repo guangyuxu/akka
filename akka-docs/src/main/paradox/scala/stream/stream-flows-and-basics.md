@@ -254,7 +254,8 @@ but is not restricted to that—it could also mean opening files or socket conne
 
 Materialization is triggered at so called "terminal operations". Most notably this includes the various forms of the `run()`
 and `runWith()` methods defined on `Source` and `Flow` elements as well as a small number of special syntactic sugars for running with
-well-known sinks, such as @scala[`runForeach(el => ...)`] @java[`runForeach(el -> ...)`] (being an alias to @scala[`runWith(Sink.foreach(el => ...))`] @java[`runWith(Sink.foreach(el -> ...))`].
+well-known sinks, such as @scala[`runForeach(el => ...)`]@java[`runForeach(el -> ...)`]
+(being an alias to @scala[`runWith(Sink.foreach(el => ...))`]@java[`runWith(Sink.foreach(el -> ...))`]).
 
 Materialization is currently performed synchronously on the materializing thread.
 The actual stream processing is handled by actors started up during the streams materialization,
@@ -352,5 +353,5 @@ such as `Zip` however *do guarantee* their outputs order, as each output element
 been signalled already – thus the ordering in the case of zipping is defined by this property.
 
 If you find yourself in need of fine grained control over order of emitted elements in fan-in
-scenarios consider using `MergePreferred` or `GraphStage` – which gives you full control over how the
+scenarios consider using `MergePreferred`, `MergePrioritized` or `GraphStage` – which gives you full control over how the
 merge is performed.
